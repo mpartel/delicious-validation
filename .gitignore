@@ -1,0 +1,16 @@
+# Build products
+target
+
+# Eclipse
+.classpath
+.project
+.settings
+.cache
+.scala_dependencies
+.worksheet
+*.sc
+
+# IntelliJ IDEA
+.idea
+.idea_modules
+
