@@ -4,11 +4,17 @@ import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.reflect.macros.Context
 
-case class FieldExpression[T](components: Seq[String], value: T)
+case class FieldExpression[T](components: Seq[String], value: T) {
+  def ~(msg: String) = FieldExpressionAndMsg(this, msg)
+}
 
-object FieldExpression {
-  implicit def toFieldExpression[T](expr: T): FieldExpression[T]  = macro toFieldExpression_impl[T]
+case class FieldExpressionAndMsg[T](expr: FieldExpression[T], msg: String)
 
+trait FieldExpressionImplicits {
+  implicit def toFieldExpression[T](expr: T): FieldExpression[T] = macro FieldExpressionImplicits.toFieldExpression_impl[T]
+}
+
+object FieldExpressionImplicits extends FieldExpressionImplicits {
   def toFieldExpression_impl[T](c: Context)(expr: c.Expr[T]): c.Expr[FieldExpression[T]] = {
     import c.universe._
 
