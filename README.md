@@ -82,6 +82,10 @@ password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 
 [TBD]
 
+### External validators
+
+[TBD: `new Validator(obj) { obj.foo ~ "must ..." ~ (...) };` where `Validator` is a typeclass alternative to `extends Validated`]
+
 ### Maximum size annotations
 
 [TBD]
@@ -97,7 +101,7 @@ password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 - Error messages should be close to the validation code. Although we also support reusable validators, we believe a little potential repetition in the name of simplicity is a good tradeoff here.
 - Validation errors should know the field that failed so the UI can display the error in the appropriate place.
 - Validated objects should be composable. We validate fields recursively.
-- Error message sentence structure should be free regulated.
+- Error message sentence structure should be not be limited.
 
 
 ## How it works
