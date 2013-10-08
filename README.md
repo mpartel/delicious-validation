@@ -82,10 +82,6 @@ password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 
 [TBD]
 
-### External validators
-
-[TBD: `new Validator(obj) { obj.foo ~ "must ..." ~ (...) };` where `Validator` is a typeclass alternative to `extends Validated`]
-
 ### Maximum size annotations
 
 [TBD]
