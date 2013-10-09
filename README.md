@@ -47,7 +47,18 @@ Scala 2.10.2+ is required.
 
 There are no official releases just yet, but there will be soon.
 
-[TBD: SBT and Maven instructions]
+### SBT
+
+Use `dependsOn` in your _build.scala_:
+
+```
+object YourBuild extends Build {
+    lazy val project = Project("project", file(".")).dependsOn(deliciousValidation)
+    lazy val deliciousValidation = RootProject(uri("git://github.com/mpartel/delicious-validation"))
+}
+```
+
+[TBD: Maven instructions]
 
 
 ## Web frameworks
