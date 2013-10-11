@@ -1,17 +1,17 @@
-package so.delicious.validation.macros
+package so.delicious.validation
 
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.language.higherKinds
 import scala.reflect.macros.Context
 
-trait FieldExpressionMacros {
-  import FieldExpressionMacros._
-  implicit def toFieldExpression[T](expr: T): FieldExpression[T] = macro toFieldExpression_impl[T]
-}
-
-object FieldExpressionMacros extends FieldExpressionMacros {
-  def toFieldExpression_impl[T](c: Context)(expr: c.Expr[T]): c.Expr[FieldExpression[T]] = {
+object FieldExpressionMacros {
+  /**
+   * DSL implementation detail.
+   *
+   * Converts an expression to a FieldExpression.
+   */
+  def toFieldExpressionMacro[T](c: Context)(expr: c.Expr[T]): c.Expr[FieldExpression[T]] = {
     import c.universe._
 
     def findComponents(t: c.Tree): List[String] = {
@@ -34,10 +34,15 @@ object FieldExpressionMacros extends FieldExpressionMacros {
     reify { FieldExpression(listMakingExpr.splice.map(Symbol(_)), expr.splice) }
   }
 
-  def toFieldExpressionWithWrapper_impl[T, W[_]](c: Context)(expr: c.Expr[T])(wrap: c.Expr[FieldExpression[T] => W[T]]): c.Expr[W[T]] = {
+  /**
+   * DSL implementation detail.
+   *
+   * Converts an expression to a wrapper type W, where W can be built from a field expression.
+   */
+  def toFieldExpressionWithWrapperMacro[T, W[_]](c: Context)(expr: c.Expr[T])(wrap: c.Expr[FieldExpression[T] => W[T]]): c.Expr[W[T]] = {
     import c.universe._
 
-    val fieldExprMakingExpr = toFieldExpression_impl[T](c)(expr)
+    val fieldExprMakingExpr = toFieldExpressionMacro[T](c)(expr)
     reify { wrap.splice.apply(fieldExprMakingExpr.splice) }
   }
 }

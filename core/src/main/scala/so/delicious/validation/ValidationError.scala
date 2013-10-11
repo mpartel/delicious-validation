@@ -1,5 +1,6 @@
 package so.delicious.validation
 
-case class ValidationError(context: Seq[Symbol], message: String, value: Any) {
-  def inContext(sym: Symbol) = this.copy(context = sym +: context)
+case class ValidationError(context: Seq[String], message: String, value: Any) {
+  def inContext(ctx: String) = this.copy(context = ctx +: context)
+  def inContext(ctx: List[String]) = this.copy(context = ctx ++ context)
 }

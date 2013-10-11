@@ -1,28 +1,15 @@
 package so.delicious.validation
 
+import scala.language.experimental.macros
 import scala.language.implicitConversions
-import so.delicious.validation.macros._
 
 /**
  * Base trait for validatable objects.
  */
-trait Validated extends DelayedInit with FieldExpressionDslBase {
+trait Validated {
   @transient protected[this] var _validationErrors = List.empty[ValidationError]
 
-  def delayedInit(init: => Unit) {
-    subvalidated.map { case (sym, v) =>
-      for (e <- v.validationErrors) {
-        _validationErrors ::= e.inContext(sym)
-      }
-    }
-
-    // Subobjects get validated first because
-    // the container may be interested in their validity.
-
-    init
-
-    _validationErrors = _validationErrors.reverse
-  }
+  validateSubobjects(subobjectsToValidate)
 
   /**
    * Whether the object has no validation errors.
@@ -35,7 +22,7 @@ trait Validated extends DelayedInit with FieldExpressionDslBase {
   /**
    * The object's validation errors.
    */
-  def validationErrors: Seq[ValidationError] = _validationErrors
+  def validationErrors: Seq[ValidationError] = _validationErrors.reverse
 
   /**
    * Throws `ValidationException` if `!isValid`.
@@ -47,19 +34,58 @@ trait Validated extends DelayedInit with FieldExpressionDslBase {
   }
 
   /**
-   * The subobjects to validate.
+   * Validates the given list of subpath-subobject pairs and adds the errors to
+   * the current object's list of validation errors.
    *
-   * Defaults to all fields created from public constructor parameters
-   * (i.e. either `val` parameters or case class parameters).
+   * By default, called on `subobjectsToValidate` in the `Validated` trait's constructor.
    *
    * May be overridden.
    */
-  protected[this] def subvalidated: Seq[(Symbol, Validated)] = {
-    ConstructorParams(this).flatMap { case (sym, mirror) =>
-      mirror.get match {
-        case v: Validated => Some(sym, v)
-        case _ => None
+  protected[this] def validateSubobjects(subobjects: Seq[(List[String], Validated)]) {
+    subobjects.map { case (ctx, v) =>
+      for (e <- v.validationErrors) {
+        _validationErrors ::= e.inContext(ctx)
       }
+    }
+  }
+
+  /**
+   * The subobjects to validate during the `Validated` trait's constructor.
+   *
+   * Defaults to all public parameters in the primary constructor's first parameter list.
+   *
+   * May be overridden.
+   */
+  protected[this] def subobjectsToValidate: Seq[(List[String], Validated)] = {
+    ConstructorParams(this).flatMap { case (sym, value) =>
+      castToValidated(List(sym.name), value).map {
+        case (reverseCtx, v) => (reverseCtx.reverse, v)
+      }
+    }.toSeq
+  }
+
+  /**
+   * Recursively converts an object to `Iterable[(List[String], Validated)]` if possible.
+   *
+   * By default, arguments of the following runtime types are traversed:
+   * - `Validated`
+   * - `Some[Validated]`
+   * - `Map[_, Validated]`
+   * - `Iterable[Validated]`
+   *
+   * Called by the default implementation of `subobjectsToValidate`.
+   */
+  protected[this] def castToValidated(reverseCtx: List[String], value: Any): Iterable[(List[String], Validated)] = {
+    value match {
+      case v: Validated => List(reverseCtx -> v)
+      case Some(v: Validated) => List(reverseCtx -> v)
+      case map: Map[_, _] => map.flatMap {
+        case (k, v) => castToValidated(k.toString :: reverseCtx, v)
+      }
+      case iterable: Iterable[_] => iterable.zipWithIndex.flatMap {
+        case (a, i) => castToValidated(i.toString :: reverseCtx, a)
+      }
+      case _ => List.empty
     }
   }
 
@@ -68,18 +94,22 @@ trait Validated extends DelayedInit with FieldExpressionDslBase {
   }
 
   private[this] def addValidationError[T](expr: FieldExpression[T], msg: String) {
-    _validationErrors ::= ValidationError(expr.components, msg, expr.value)
+    _validationErrors ::= ValidationError(expr.components.map(_.name), msg, expr.value)
   }
 
 
-  type W[T] = AfterFieldExpression[T]
-
+  /** DSL implementation detail. */
   implicit class AfterFieldExpression[A](expr: FieldExpression[A]) {
     def ~(msg: String) = new AfterTilde(expr, msg)
-    def must(msg: String) = new AfterMustWord(expr, msg)  // maybe remove
-    def is(msg: String) = new AfterIsWord(expr, msg)      // maybe remove
   }
 
+  /** DSL implementation detail. */
+  implicit def toAfterFieldExpression[T](expr: T)(
+    implicit wrap: FieldExpression[T] => AfterFieldExpression[T]
+  ): AfterFieldExpression[T] = macro FieldExpressionMacros.toFieldExpressionWithWrapperMacro[T, AfterFieldExpression]
+
+
+  /** DSL implementation detail. */
   class AfterTilde[A](expr: FieldExpression[A], msg: String) {
     def ~(isGood: => Boolean) {
       if (!isGood) {
@@ -87,24 +117,6 @@ trait Validated extends DelayedInit with FieldExpressionDslBase {
       }
     }
 
-    def when(isBad: => Boolean) {
-      if (isBad) {
-        addValidationError(expr, msg)
-      }
-    }
-  }
-
-  class AfterMustWord[A](expr: FieldExpression[A], msg: String) {
-    def thatIs(isGood: => Boolean) {
-      if (!isGood) {
-        addValidationError(expr, msg)
-      }
-    }
-    def meaning(isGood: => Boolean) { thatIs(isGood) }
-    def ie(isGood: => Boolean) { thatIs(isGood) }
-  }
-
-  class AfterIsWord[A](expr: FieldExpression[A], msg: String) {
     def when(isBad: => Boolean) {
       if (isBad) {
         addValidationError(expr, msg)

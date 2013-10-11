@@ -7,24 +7,31 @@ class BasicValidationTest extends FreeSpec with Matchers {
   case class Foo(x: Int, y: String) extends Validated {
     x ~ "must be greater than the length of y" ~ (x > y.length)
     x ~ "must be no more than 100" ~ (x < 100)
+    x ~ "is too small" when (x < 10)
   }
 
   "when the first validation fails" in {
-    Foo(2, "asd").validationErrors should equal (List(
-      ValidationError(List('x), "must be greater than the length of y", 2)
+    Foo(12, "asd" * 100).validationErrors should equal (List(
+      ValidationError(List("x"), "must be greater than the length of y", 12)
     ))
   }
 
   "when the second validation fails" in {
     Foo(9001, "asd").validationErrors should equal (List(
-      ValidationError(List('x), "must be no more than 100", 9001)
+      ValidationError(List("x"), "must be no more than 100", 9001)
     ))
   }
 
-  "when both validations fail" in {
+  "when two validations fail" in {
     Foo(101, "asd" * 100).validationErrors should equal (List(
-      ValidationError(List('x), "must be greater than the length of y", 101),
-      ValidationError(List('x), "must be no more than 100", 101)
+      ValidationError(List("x"), "must be greater than the length of y", 101),
+      ValidationError(List("x"), "must be no more than 100", 101)
+    ))
+  }
+
+  "when a 'when' validation fails" in {
+    Foo(5, "asd").validationErrors should equal (List(
+      ValidationError(List("x"), "is too small", 5)
     ))
   }
 
