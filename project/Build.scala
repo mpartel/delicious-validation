@@ -43,8 +43,7 @@ object MasterBuild extends Build {
       commonSettings ++ Seq(
         name := "delicious-validation",
         libraryDependencies ++= Seq(
-          "org.scalatest" % "scalatest_2.10" % "2.0.RC1" % "test",
-          "com.chuusai" % "shapeless_2.10.2" % "2.0.0-M1" % "test"
+          "org.scalatest" % "scalatest_2.10" % "2.0.RC2" % "test"
         )
       )
   ) dependsOn (macroProject)
