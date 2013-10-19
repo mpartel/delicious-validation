@@ -2,6 +2,7 @@ package so.delicious.validation
 
 import scala.language.experimental.macros
 import scala.language.implicitConversions
+import scala.reflect.runtime.{universe => runtimeUniverse}
 
 /**
  * Base trait for validatable objects.
@@ -32,6 +33,11 @@ trait Validated {
       throw new ValidationException(_validationErrors)
     }
   }
+
+  /**
+   * Grabs a validation dependency from an implicit `ValidationDependencyInjector`.
+   */
+  def injected[T : runtimeUniverse.TypeTag](implicit injector: ValidationDependencyInjector) = injector.get[T]
 
   /**
    * Validates the given list of subpath-subobject pairs and adds the errors to

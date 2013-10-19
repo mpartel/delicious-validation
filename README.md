@@ -113,7 +113,7 @@ password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 
 ### Dependency injection
 
-[TBD]
+[TBD: explain the choices]
 
 ### Reusable validation rules
 
