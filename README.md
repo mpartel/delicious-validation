@@ -111,6 +111,43 @@ Error messages are just plain strings in plain code, so you can pass them throug
 password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 ```
 
+### External validators
+
+It's possible to put validation rules in a separate `Validator` object.
+
+```scala
+case class CreateUser(email: EmailAddress, password: String) extends ExternallyValidated
+
+object ChangePassword {
+  implicit val validator = defineValidator[CreateUser] {
+    // Note: we must refer to fields via `obj`.
+    obj.password ~ "must be at least 8 characters" ~ (password.length > 8)
+  }
+}
+
+// Obtain an implicit validator.
+// Works the same as implicitly[Validator[CreateUser]].
+val validator = validatorFor[CreateUser]
+val result = validator.validate(ChangePassword("abc123"))
+result.validationErrors
+result.isValid
+```
+
+Whether you want to use `Validated` or `ExternallyValidated` is a matter of preference and depends on your project setup. The two can be mixed such that an ExternallyValidated can contain Validated objects, but not vice versa (since cannot resolve implicits at runtime).
+
+
+[TODO: consider `... extends Validated { def validator(di, params) = <macro call> }`. Combines the advantages of both, except maybe for DI. Consider Guice and Cake.]
+
+#### Advangates of `ExternallyValidated`.
+
+- Works better with some dependency-injectors unless you're prepared to make the injector global or thread-local.
+- Subvalidatables are resolved at compile-time instead of reflectively at runtime.
+
+#### Advantages of plain `Validated`
+
+- More concise.
+- Validation rules closer to the object.
+
 ### Dependency injection
 
 [TBD]
@@ -131,7 +168,7 @@ password ~ "must be at least %d characters".tr(8) ~ (password.length > 8)
 
 ## Rationale
 
-- Validators should be written in plain code, not some [complicated DSL](http://eed3si9n.com/learning-scalaz/Validation.html) or [clunky annotation system](http://symfony.com/doc/current/book/validation.html).
+- Validation conditions should be written in plain code, not some [complicated DSL](http://eed3si9n.com/learning-scalaz/Validation.html) or [clunky annotation system](http://symfony.com/doc/current/book/validation.html).
 - Error messages should be close to the validation code. Although we also support reusable validators, we believe a little potential repetition in the name of simplicity is a good tradeoff here.
 - Validation errors should know the field that failed so the UI can display the error in the appropriate place.
 - Validated objects should be composable. We validate fields recursively.

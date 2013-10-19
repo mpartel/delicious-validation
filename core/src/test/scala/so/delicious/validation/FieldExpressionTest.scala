@@ -3,6 +3,7 @@ package so.delicious.validation
 import scala.language.experimental.macros
 import org.scalatest.FreeSpec
 
+/*
 class FieldExpressionTest extends FreeSpec {
   def toFieldExpression[T](expr: T) = macro FieldExpressionMacros.toFieldExpressionMacro[T]
 
@@ -19,3 +20,4 @@ class FieldExpressionTest extends FreeSpec {
     assert(Testing.expr.components === Seq('a, 'b, 'a, 'a, 'c))
   }
 }
+*/

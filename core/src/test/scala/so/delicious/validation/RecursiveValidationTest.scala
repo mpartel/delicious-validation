@@ -3,6 +3,7 @@ package so.delicious.validation
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers
 
+/*
 object RecursiveValidationTest {
   case class Positive(n: Int) extends Validated {
     n ~ "must be positive" ~ (n > 0)
@@ -153,3 +154,4 @@ class RecursiveValidationTest extends FreeSpec with Matchers {
   }
 
 }
+*/

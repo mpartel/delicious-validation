@@ -3,6 +3,7 @@ package so.delicious.validation
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers
 
+/*
 class BasicValidationTest extends FreeSpec with Matchers {
   case class Foo(x: Int, y: String) extends Validated {
     x ~ "must be greater than the length of y" ~ (x > y.length)
@@ -39,3 +40,4 @@ class BasicValidationTest extends FreeSpec with Matchers {
     Foo(10, "asd").validationErrors should be (empty)
   }
 }
+*/

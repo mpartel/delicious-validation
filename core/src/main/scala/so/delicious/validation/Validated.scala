@@ -6,10 +6,14 @@ import scala.language.implicitConversions
 /**
  * Base trait for validatable objects.
  */
-trait Validated {
+trait Validated[T <: Validated[T]] extends AbstractValidated {  // TODO: rename Validatable
+  _: T =>
+
+  def validator: Validator[T]
+
   @transient protected[this] var _validationErrors = List.empty[ValidationError]
 
-  validateSubobjects(subobjectsToValidate)
+  //validateSubobjects(subobjectsToValidate)
 
   /**
    * Whether the object has no validation errors.
@@ -33,6 +37,7 @@ trait Validated {
     }
   }
 
+/*
   /**
    * Validates the given list of subpath-subobject pairs and adds the errors to
    * the current object's list of validation errors.
@@ -88,7 +93,9 @@ trait Validated {
       case _ => List.empty
     }
   }
+*/
 
+/*
   private[this] def addValidationError(e: ValidationError) {
     _validationErrors ::= e
   }
@@ -123,4 +130,5 @@ trait Validated {
       }
     }
   }
+*/
 }
